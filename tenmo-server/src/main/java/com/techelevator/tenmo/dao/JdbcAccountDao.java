@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
+import org.w3c.dom.DOMException;
 
 @Component
 public class JdbcAccountDao implements AccountDao{
@@ -27,6 +28,20 @@ public class JdbcAccountDao implements AccountDao{
             }
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
+        }
+        return account;
+    }
+
+    public Account getAccountByUserId(int userId) {
+        Account account = null;
+        String sql = "Select account_id, user_id, balance from account where user_id = ?";
+        try {
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql, userId);
+            if(results.next()) {
+                account = mapRowToAccount(results);
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server of database", e);
         }
         return account;
     }

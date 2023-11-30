@@ -14,7 +14,7 @@ import com.techelevator.tenmo.dao.UserDao;
 import com.techelevator.tenmo.security.jwt.TokenProvider;
 import org.springframework.web.server.ResponseStatusException;
 
-@PreAuthorize("isAuthenticated()")
+//@PreAuthorize("isAuthenticated()")
 @RestController
 public class AccountController {
 
@@ -27,6 +27,12 @@ public class AccountController {
     @RequestMapping(path = "/accounts/{accountId}", method = RequestMethod.GET)
     public Account getAccountById(@PathVariable int accountId) {
         Account account = accountDao.getAccountById(accountId);
+        return account;
+    }
+
+    @RequestMapping(path="/accounts", method = RequestMethod.GET)
+    public Account getAccountByUserId(@RequestParam int user_id) {
+        Account account = accountDao.getAccountByUserId(user_id);
         return account;
     }
 

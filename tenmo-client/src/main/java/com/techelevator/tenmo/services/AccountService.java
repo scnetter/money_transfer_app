@@ -7,6 +7,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.client.RestTemplate;
@@ -22,5 +23,10 @@ public class AccountService {
         return account;
     }
 
+    public Account getAccountByUserId(int userId) {
+        Account account = null;
+        account = restTemplate.getForObject(API_BASE_URL + "?user_id=" + userId, Account.class);
+        return account;
+    }
 
 }
