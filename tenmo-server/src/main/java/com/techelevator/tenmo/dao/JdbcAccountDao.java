@@ -18,7 +18,7 @@ public class JdbcAccountDao implements AccountDao{
 
     public Account getAccountById(int accountId) {
         Account account = null;
-        String sql = "SELECT account_id, username, password_hash FROM tenmo_account WHERE account_id =?";
+        String sql = "SELECT account_id, username, password_hash FROM account WHERE account_id =?";
         try {
             SqlRowSet results = jdbcTemplate.queryForRowSet(sql, accountId);
             if(results.next()) {
