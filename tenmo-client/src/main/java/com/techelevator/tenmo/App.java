@@ -9,6 +9,7 @@ import com.techelevator.tenmo.services.AuthenticationService;
 import com.techelevator.tenmo.services.ConsoleService;
 import com.techelevator.tenmo.services.UserService;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class App {
@@ -113,12 +114,26 @@ public class App {
 
 	private void sendBucks() {
         userService.setAuthToken(currentUser.getToken());
-		// TODO Auto-generated method stub
+        // TODO Auto-generated method stub
         User[] users = userService.getUsers();
-        for(User user : users) {
+        List<Integer> userIds = new ArrayList<>();
+
+        for (User user : users) {
             if (currentUser.getUser().getId() != user.getId()) {
                 System.out.println(user.getId() + " " + user.getUsername());
+                userIds.add(user.getId());
             }
+        }
+
+
+        int transferUserId = 0;
+        while (true){
+            transferUserId = consoleService.promptForInt("\nEnter the User ID of the user to send money: ");
+            if(!userIds.contains(transferUserId)){
+                System.out.println("You must select a valid User ID.");
+                continue;
+            }
+            break;
         }
 	}
 
