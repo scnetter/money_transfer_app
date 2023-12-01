@@ -90,8 +90,10 @@ public class App {
 
 	private void viewCurrentBalance() {
 
+        accountService.setAuthToken(currentUser.getToken());
+
 		Account account = accountService.getAccountByUserId(currentUser.getUser().getId());
-        System.out.println("Your current balance is $" + account.getBalance());
+        System.out.println("Your current balance is: $" + account.getBalance());
 	}
 
 	private void viewTransferHistory() {

@@ -18,6 +18,10 @@ public class AccountService {
     public String API_BASE_URL = "http://localhost:8080/accounts";
     private final RestTemplate restTemplate = new RestTemplate();
     private String authToken = null;
+
+    public void setAuthToken(String authToken) {
+        this.authToken = authToken;
+    }
     public Account getAccountById(int accountId) {
         Account account = null;
         account = restTemplate.getForObject(API_BASE_URL + "/" + accountId, Account.class);
@@ -43,6 +47,8 @@ public class AccountService {
 
         return account;
     }
+
+
 
 
 

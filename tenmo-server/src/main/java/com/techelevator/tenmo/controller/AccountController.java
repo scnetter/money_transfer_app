@@ -14,7 +14,7 @@ import com.techelevator.tenmo.dao.UserDao;
 import com.techelevator.tenmo.security.jwt.TokenProvider;
 import org.springframework.web.server.ResponseStatusException;
 
-//@PreAuthorize("isAuthenticated()")
+@PreAuthorize("isAuthenticated()")
 @RestController
 public class AccountController {
 
