@@ -115,10 +115,11 @@ public class App {
         userService.setAuthToken(currentUser.getToken());
 		// TODO Auto-generated method stub
         User[] users = userService.getUsers();
-        for(User user : users){
-            System.out.println(user.getId() + " " + user.getUsername());
+        for(User user : users) {
+            if (currentUser.getUser().getId() != user.getId()) {
+                System.out.println(user.getId() + " " + user.getUsername());
+            }
         }
-		
 	}
 
 	private void requestBucks() {
