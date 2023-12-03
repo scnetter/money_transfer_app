@@ -38,7 +38,7 @@ public class JdbcTransferDao implements TransferDao {
         return transfers;
     }
 
-    public Transfer updateTransfer(TransferDto transferDto) {
+    public Transfer addTransfer(TransferDto transferDto) {
         Transfer newTransfer = null;
         String sql = "";
         if(transferDto.getTransferTypeId() == 2){

@@ -34,6 +34,14 @@ public class TransferController {
         return transfers;
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
+    @RequestMapping(path = "/transfers", method = RequestMethod.POST)
+    public void addTransfer(@RequestBody TransferDto transferDto) {
+
+        Transfer newTransfer = null;
+        newTransfer = transferDao.addTransfer(transferDto);
+    }
+
 //    @RequestMapping(path="/accounts", method = RequestMethod.GET)
 //    public Account getAccountByUserId(@RequestParam int user_id) {
 //        Account account = accountDao.getAccountByUserId(user_id);
