@@ -5,11 +5,13 @@ import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.TransferDto;
 import com.techelevator.tenmo.model.User;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -26,7 +28,7 @@ public class JdbcTransferDao implements TransferDao {
     }
 
     @Override
-    public List<Transfer> getTransfers(){
+    public List<Transfer> getTransfers() {
         List<Transfer> transfers = new ArrayList<>();
         String sql = "SELECT transfer_id, transfer_type_id, transfer_status_id, account_from, account_to, amount FROM transfer";
         try {
@@ -43,28 +45,62 @@ public class JdbcTransferDao implements TransferDao {
 
     public Transfer addTransfer(TransferDto transferDto) {
         Transfer newTransfer = null;
-        String sql = "";
-        if(transferDto.getTransferTypeId() == 2){
-            if(validateTransfer(transferDto)) {
-                sql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount, transfer_status_id)" +
+        String transferSql = "";
+        String balanceSql = "";
+        String updateBalanceSql = "";
+        BigDecimal fromBalance = new BigDecimal(0);
+        BigDecimal toBalance = new BigDecimal(0);
+        if (transferDto.getTransferTypeId() == 2) {
+            if (validateTransfer(transferDto)) {
+
+                balanceSql = "SELECT balance FROM account WHERE account_id = ?;";
+
+                updateBalanceSql = "UPDATE account SET balance = ? WHERE account_id = ?;";
+
+                transferSql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount, transfer_status_id)" +
                         "VALUES(DEFAULT, ?, ?, ?, ?, 2) RETURNING transfer_id;";
+
+                try {
+                    SqlRowSet results = jdbcTemplate.queryForRowSet(balanceSql, transferDto.getAccountFrom());
+                    if (results.next()) {
+                        fromBalance = results.getBigDecimal("balance");
+                    }
+                    results = jdbcTemplate.queryForRowSet(balanceSql, transferDto.getAccountTo());
+                    if (results.next()) {
+                        toBalance = results.getBigDecimal("balance");
+                    }
+                } catch (CannotGetJdbcConnectionException e) {
+                    throw new DaoException("Unable to connect to server or database", e);
+                }
+                try {
+                    jdbcTemplate.update(updateBalanceSql, fromBalance.subtract(transferDto.getTransferAmount()) , transferDto.getAccountFrom());
+                    jdbcTemplate.update(updateBalanceSql, toBalance.add(transferDto.getTransferAmount()) , transferDto.getAccountTo());
+                } catch (BadSqlGrammarException e) {
+                    throw new DaoException("SQL syntax error", e);
+                } catch (DataIntegrityViolationException e) {
+                    throw new DaoException("Data integrity violation", e);
+                } catch (CannotGetJdbcConnectionException e) {
+                    throw new DaoException("Unable to connect to server or database", e);
+                }
+
+                Integer newTransferId = jdbcTemplate.queryForObject(
+                        transferSql,
+                        Integer.class,
+                        transferDto.getTransferTypeId(),
+                        transferDto.getAccountFrom(),
+                        transferDto.getAccountTo(),
+                        transferDto.getTransferAmount());
+
+                newTransfer = getTransferById(newTransferId);
+
             } else {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient Funds for Transfer.");
             }
         } else {
-            sql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount, transfer_status_id)" +
+            transferSql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount, transfer_status_id)" +
                     "VALUES(DEFAULT, 1, ?, ?, ?, 1) RETURNING transfer_id;";
         }
 
-        Integer newTransferId = jdbcTemplate.queryForObject(
-                sql,
-                Integer.class,
-                transferDto.getTransferTypeId(),
-                transferDto.getAccountFrom(),
-                transferDto.getAccountTo(),
-                transferDto.getTransferAmount());
-
-        newTransfer = getTransferById(newTransferId);
 
         return newTransfer;
     }
@@ -110,13 +146,13 @@ public class JdbcTransferDao implements TransferDao {
         BigDecimal balance = new BigDecimal(0);
         try {
             SqlRowSet results = jdbcTemplate.queryForRowSet(sql, transferDto.getAccountFrom());
-            if(results.next()){
+            if (results.next()) {
                 balance = results.getBigDecimal("balance");
             }
         } catch (CannotGetJdbcConnectionException e) {
             throw new DaoException("Unable to connect to server or database", e);
         }
-        if(balance.compareTo(transferDto.getTransferAmount()) == -1){
+        if (balance.compareTo(transferDto.getTransferAmount()) == -1) {
             return false;
         }
         return true;
