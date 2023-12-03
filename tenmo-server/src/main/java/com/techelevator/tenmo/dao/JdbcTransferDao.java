@@ -40,8 +40,14 @@ public class JdbcTransferDao implements TransferDao {
 
     public Transfer updateTransfer(TransferDto transferDto) {
         Transfer newTransfer = null;
-        String sql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount)" +
-                    "VALUES(DEFAULT, 2, ?, ?, ?) RETURNING transfer_id;";
+        String sql = "";
+        if(transferDto.getTransferTypeId() == 2){
+            sql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount, transfer_status_id)" +
+                    "VALUES(DEFAULT, 2, ?, ?, ?, 2) RETURNING transfer_id;";
+        } else {
+            sql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount, transfer_status_id)" +
+                    "VALUES(DEFAULT, 1, ?, ?, ?, 1) RETURNING transfer_id;";
+        }
 
         Integer newTransferId = jdbcTemplate.queryForObject(
                 sql,
