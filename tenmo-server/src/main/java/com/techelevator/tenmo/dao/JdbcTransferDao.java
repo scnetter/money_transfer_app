@@ -4,11 +4,14 @@ import com.techelevator.tenmo.exception.DaoException;
 import com.techelevator.tenmo.model.Transfer;
 import com.techelevator.tenmo.model.TransferDto;
 import com.techelevator.tenmo.model.User;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,8 +45,12 @@ public class JdbcTransferDao implements TransferDao {
         Transfer newTransfer = null;
         String sql = "";
         if(transferDto.getTransferTypeId() == 2){
-            sql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount, transfer_status_id)" +
-                    "VALUES(DEFAULT, 2, ?, ?, ?, 2) RETURNING transfer_id;";
+            if(validateTransfer(transferDto)) {
+                sql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount, transfer_status_id)" +
+                        "VALUES(DEFAULT, ?, ?, ?, ?, 2) RETURNING transfer_id;";
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient Funds for Transfer.");
+            }
         } else {
             sql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount, transfer_status_id)" +
                     "VALUES(DEFAULT, 1, ?, ?, ?, 1) RETURNING transfer_id;";
@@ -96,5 +103,22 @@ public class JdbcTransferDao implements TransferDao {
         transfer.setAccountTo(rs.getInt("account_to"));
         transfer.setTransferAmount(rs.getBigDecimal("amount"));
         return transfer;
+    }
+
+    private boolean validateTransfer(TransferDto transferDto) {
+        String sql = "Select * from account where user_id = ?;";
+        BigDecimal balance = new BigDecimal(0);
+        try {
+            SqlRowSet results = jdbcTemplate.queryForRowSet(sql, transferDto.getAccountFrom());
+            if(results.next()){
+                balance = results.getBigDecimal("balance");
+            }
+        } catch (CannotGetJdbcConnectionException e) {
+            throw new DaoException("Unable to connect to server or database", e);
+        }
+        if(balance.compareTo(transferDto.getTransferAmount()) == -1){
+            return false;
+        }
+        return true;
     }
 }
