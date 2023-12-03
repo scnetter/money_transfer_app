@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface TransferDao {
 
-    int updateTransfer(TransferDto transferDto);
+    Transfer updateTransfer(TransferDto transferDto);
     List<Transfer> getTransfers();
 
     Transfer getTransferById(int transfer_id);

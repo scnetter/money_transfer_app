@@ -2,6 +2,7 @@ package com.techelevator.tenmo.dao;
 
 import com.techelevator.tenmo.exception.DaoException;
 import com.techelevator.tenmo.model.Transfer;
+import com.techelevator.tenmo.model.TransferDto;
 import com.techelevator.tenmo.model.User;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -13,6 +14,8 @@ import java.util.List;
 
 @Component
 public class JdbcTransferDao implements TransferDao {
+
+
     private final JdbcTemplate jdbcTemplate;
 
     public JdbcTransferDao(JdbcTemplate jdbcTemplate) {
@@ -33,6 +36,24 @@ public class JdbcTransferDao implements TransferDao {
             throw new DaoException("Unable to connect to server or database", e);
         }
         return transfers;
+    }
+
+    public Transfer updateTransfer(TransferDto transferDto) {
+        Transfer newTransfer = null;
+        String sql = "INSERT into transfer(transfer_id, transfer_type_id, account_from, account_to, amount)" +
+                    "VALUES(DEFAULT, 2, ?, ?, ?) RETURNING transfer_id;";
+
+        Integer newTransferId = jdbcTemplate.queryForObject(
+                sql,
+                Integer.class,
+                transferDto.getTransferTypeId(),
+                transferDto.getAccountFrom(),
+                transferDto.getAccountTo(),
+                transferDto.getTransferAmount());
+
+        newTransfer = getTransferById(newTransferId);
+
+        return newTransfer;
     }
 
     @Override
