@@ -142,7 +142,7 @@ public class JdbcTransferDao implements TransferDao {
     }
 
     private boolean validateTransfer(TransferDto transferDto) {
-        String sql = "Select * from account where user_id = ?;";
+        String sql = "Select * from account where account_id = ?;";
         BigDecimal balance = new BigDecimal(0);
         try {
             SqlRowSet results = jdbcTemplate.queryForRowSet(sql, transferDto.getAccountFrom());
