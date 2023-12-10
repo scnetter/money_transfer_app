@@ -1,14 +1,9 @@
 package com.techelevator.tenmo;
 
-import com.techelevator.tenmo.model.Account;
-import com.techelevator.tenmo.model.AuthenticatedUser;
-import com.techelevator.tenmo.model.User;
-import com.techelevator.tenmo.model.UserCredentials;
-import com.techelevator.tenmo.services.AccountService;
-import com.techelevator.tenmo.services.AuthenticationService;
-import com.techelevator.tenmo.services.ConsoleService;
-import com.techelevator.tenmo.services.UserService;
+import com.techelevator.tenmo.model.*;
+import com.techelevator.tenmo.services.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +16,8 @@ public class App {
 
     private final AccountService accountService = new AccountService();
     private final UserService userService = new UserService();
+
+    private final TransferService transferService = new TransferService();
 
     private AuthenticatedUser currentUser;
 
@@ -115,6 +112,7 @@ public class App {
 	private void sendBucks() {
         userService.setAuthToken(currentUser.getToken());
         // TODO Auto-generated method stub
+        BigDecimal transferAmount = new BigDecimal(0);
         User[] users = userService.getUsers();
         List<Integer> userIds = new ArrayList<>();
 
@@ -127,15 +125,38 @@ public class App {
 
 
         int transferUserId = 0;
-        while (true){
+        while (true) {
             transferUserId = consoleService.promptForInt("\nEnter the User ID of the user to send money: ");
-            if(!userIds.contains(transferUserId)){
+            if (!userIds.contains(transferUserId)) {
                 System.out.println("You must select a valid User ID.");
                 continue;
             }
             break;
         }
-	}
+
+        while(true) {
+            transferAmount = consoleService.promptForBigDecimal("\n Enter the amount to transfer: ");
+            if (transferAmount.compareTo(new BigDecimal(0)) == 0) {
+                System.out.println("You must enter a valid amount.");
+                continue;
+            }
+            break;
+        }
+
+        accountService.setAuthToken(currentUser.getToken());
+        Account toAccount = accountService.getAccountByUserId(transferUserId);
+        Account fromAccount = accountService.getAccountByUserId(currentUser.getUser().getId());
+
+        TransferDto transferDto = new TransferDto(2, fromAccount.getAccount_id(),
+                toAccount.getAccount_id(), transferAmount );
+
+        transferService.setAuthToken(currentUser.getToken());
+        if(transferService.sendBucks(transferDto)){
+            System.out.println("Transfer Successful.");
+        } else {
+            System.out.println("Transfer Failed.");
+        }
+    }
 
 	private void requestBucks() {
 		// TODO Auto-generated method stub
