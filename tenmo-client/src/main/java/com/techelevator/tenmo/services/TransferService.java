@@ -31,6 +31,7 @@ public class TransferService {
         headers.setBearerAuth(authToken);
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<TransferDto> entity = new HttpEntity(transferDto, headers);
+
         try {
             restTemplate.exchange(API_BASE_URL, HttpMethod.POST, entity, Account.class);
             status = true;
